@@ -29,8 +29,12 @@ Make sure the repository exists and your GitHub token has the necessary permissi
 
 ## Usage
 
-1. Open `ghas-scan.py` in your favorite text editor.
-2. Replace `access_token` variable value with your GitHub personal access token.
+1. Create a [Github Access Token](https://docs.github.com/en/enterprise-server@3.6/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) and set the value in a `GITHUB_ACCESS_TOKEN` environment variable.
+    * This script is tested with these permissions:
+    ```
+    Read access to Dependabot alerts, actions, administration, code, codespaces metadata, metadata, pull requests, secret scanning alerts, and security events
+    ```
+2. Open `ghas-scan.py` in your favorite text editor.
 3. Replace `owner_type` variabe value with `user` or `org`. 
 4. Replace `owner_name` variable value with the corresponding user or org name.
 5. Run the script:
@@ -38,4 +42,13 @@ Make sure the repository exists and your GitHub token has the necessary permissi
     python3 ghas-scan.py
     ```
 
-Output is written to `github_data.json` at the repository root.
+### Output
+
+Output is written to `github_data.csv` at the repository root.
+
+# References
+
+* [Github REST API Documentation](https://docs.github.com/en/rest)
+* [Secret Scanning API](https://docs.github.com/en/rest/secret-scanning/secret-scanning)
+* [Code Scanning API](https://docs.github.com/en/rest/code-scanning/code-scanning)
+* [Dependabot Alerts API](https://docs.github.com/en/rest/dependabot/alerts)
