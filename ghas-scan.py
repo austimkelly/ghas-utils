@@ -1,9 +1,18 @@
 import csv
 import requests
-import json
+import os
 
-# https://docs.github.com/en/rest/dependabot/alerts?apiVersion=2022-11-28#list-dependabot-alerts-for-a-repository
-import requests
+# Set the GitHub owner type, owner name, and personal access token
+owner_type = 'user'  # Change to 'org' if needed
+owner_name = 'austimkelly'
+# Get the access token from the environment variable
+access_token = os.environ.get('GITHUB_ACCESS_TOKEN')
+
+# Include or don't include forked repositories?
+skip_forks = True
+
+# Set up headers with the access token
+headers = {'Authorization': f'token {access_token}'}
 
 def get_dependabot_alerts(owner, repo_name, headers):
     dependabot_url = f'https://api.github.com/repos/{owner}/{repo_name}/dependabot/alerts'
@@ -57,8 +66,8 @@ def get_dependabot_alerts(owner, repo_name, headers):
         num_low_dep_alerts
     )
 
-def get_tool_name(owner, repo, headers):
-    url = "https://api.github.com/repos/" + owner + "/" + repo + "/code-scanning/analyses"
+def get_code_scanning_tool_names(owner, repo_name, headers):
+    url = "https://api.github.com/repos/" + owner + "/" + repo_name + "/code-scanning/analyses"
 
     try:
         response = requests.get(url, headers=headers)
@@ -67,14 +76,6 @@ def get_tool_name(owner, repo, headers):
         response.raise_for_status()  # Raises a HTTPError if the status is 4xx, 5xx
         data = response.json()
         
-        # Specify the filename
-        filename = "output.json"
-
-        # Open the file in write mode ('w')
-        with open(filename, 'w') as file:
-            # Use json.dump to write the data to the file
-            json.dump(data, file)
-
         if data:
             return data[0]['tool']['name']
         else:
@@ -84,35 +85,43 @@ def get_tool_name(owner, repo, headers):
     except Exception as err:
         return f"Error occurred: {err}"
 
+def is_secrets_scanning_enabled(owner, repo_name, headers):
+        secrets_scanning_url = f'https://api.github.com/repos/{owner}/{repo_name}/secret-scanning/alerts'
+        response = requests.get(secrets_scanning_url, headers=headers)
+        return len(response.json()) > 0
+
 def get_codeowners(owner, repo_name, headers):
-        codeowners_url = f'https://api.github.com/repos/{owner}/{repo_name}/community/codeowners'
-        codeowners_response = requests.get(codeowners_url, headers=headers)
+    codeowners_locations = [
+        f'https://api.github.com/repos/{owner}/{repo_name}/CODEOWNERS',
+        f'https://api.github.com/repos/{owner}/{repo_name}/.github/CODEOWNERS',
+        f'https://api.github.com/repos/{owner}/{repo_name}/docs/CODEOWNERS'
+    ]
+
+    for location in codeowners_locations:
+        codeowners_response = requests.get(location, headers=headers)
+
+        #print(f"Location: {location}, Status Code: {codeowners_response.status_code}")
+        
         if codeowners_response.status_code == 200:
             codeowners = codeowners_response.text
-        else:
-            codeowners = "Not found"
-        return codeowners
+            return codeowners
 
-def get_repo_details(owner, repo_name):
+    return "Not found"
+
+
+def get_repo_details(owner, repo_name, headers):
     # Construct the repository URL using the owner and repo_name variables
     repo_url = f'https://api.github.com/repos/{owner}/{repo_name}'
 
     # Send a GET request to the repo_url and retrieve the repository information
     repo_info = requests.get(repo_url, headers=headers).json()
 
-    # Additional API calls for more details
-    # You may need to handle pagination for larger repositories
-
     # Get CODEOWNERS file
-    codeowners  =get_codeowners(owner, repo_name, headers)
+    codeowners = get_codeowners(owner, repo_name, headers)
 
-    # Last commit date
-    commits_url = f'https://api.github.com/repos/{owner}/{repo_name}/commits?per_page=1'
-    last_commit_date = requests.get(commits_url, headers=headers).json()[0]['commit']['author']['date']
-
-    # First commit date
-    first_commit_url = f'https://api.github.com/repos/{owner}/{repo_name}/commits?per_page=1'
-    first_commit_date = requests.get(first_commit_url, headers=headers).json()[-1]['commit']['author']['date']
+    # Get last and first commit dates directly from the repo_details
+    last_commit_date = repo_info['pushed_at']
+    first_commit_date = repo_info['created_at']
 
     # Is a fork
     is_fork = repo_info['fork']
@@ -124,17 +133,13 @@ def get_repo_details(owner, repo_name):
     is_archived = repo_info['archived']
 
     # Check if secrets scanning is enabled
-    secrets_scanning_url = f'https://api.github.com/repos/{owner}/{repo_name}/secret-scanning/alerts'
-    secrets_scanning_enabled = len(requests.get(secrets_scanning_url, headers=headers).json()) > 0
+    secrets_scanning_enabled = is_secrets_scanning_enabled(owner, repo_name, headers)
 
     # Get names of code scanners
-    # https://docs.github.com/en/rest/code-scanning/code-scanning?apiVersion=2022-11-28#list-code-scanning-analyses-for-a-repository
-    code_scanners_enabled = get_tool_name(owner, repo_name, headers )
+    code_scanners_enabled = get_code_scanning_tool_names(owner, repo_name, headers)
 
     # Check the number of Dependabot alerts
     dependabot_enabled, open_alerts_count, num_critical_dep_alerts, num_high_dep_alerts, num_medium_dep_alerts, num_low_dep_alerts = get_dependabot_alerts(owner, repo_name, headers)
-
-    # Other details can be fetched similarly
 
     return {
         'repo_name': repo_info['name'],
@@ -154,8 +159,26 @@ def get_repo_details(owner, repo_name):
         'num_low_dep_alerts': num_low_dep_alerts
         # Add other details here
     }
+    return {
+        'repo_name': repo_info['name'],
+        'codeowners': codeowners,
+        'last_commit_date': last_commit_date,
+        'first_commit_date': first_commit_date,
+        'is_fork': is_fork,
+        'is_private': is_private,
+        'is_archived': is_archived,
+        'secrets_scanning_enabled': secrets_scanning_enabled,
+        'code_scanners_enabled': code_scanners_enabled,
+        'dependabot_enabled': dependabot_enabled,
+        'dependabot_open_alerts_count': open_alerts_count,
+        'num_critical_dep_alerts': num_critical_dep_alerts,
+        'num_high_dep_alerts': num_high_dep_alerts,
+        'num_medium_dep_alerts': num_medium_dep_alerts,
+        'num_low_dep_alerts': num_low_dep_alerts
+        # Add other details here
+    }
 
-def get_repos(owner):
+def get_repos(owner, headers, owner_type):
     if owner_type == 'user':
         repos_url = f'https://api.github.com/users/{owner}/repos'
     elif owner_type == 'org':
@@ -164,22 +187,21 @@ def get_repos(owner):
         raise ValueError("Invalid owner type. Use 'user' or 'org'.")
 
     response = requests.get(repos_url, headers=headers)
+
     if response.status_code == 200:
         repos = response.json()
-        return repos
+
+        # Filter out forked repositories
+        if skip_forks:
+            non_forked_repos = [repo for repo in repos if not repo['fork']]
+            return non_forked_repos
+        else:
+            return repos
     else:
         raise Exception(f"Failed to fetch repositories. Status code: {response.status_code}, Response: {response.text}")
 
-# Set the GitHub owner type, owner name, and personal access token
-owner_type = 'user'  # Change to 'org' if needed
-owner_name = 'austimkelly'
-access_token = 'CHANGEME'
-
-# Set up headers with the access token
-headers = {'Authorization': f'token {access_token}'}
-
 # Get list of repositories for the user or organization
-repos = get_repos(owner_name)
+repos = get_repos(owner_name, headers, owner_type)
 
 # Write data to CSV
 csv_filename = 'github_data.csv'
@@ -205,5 +227,5 @@ with open(csv_filename, 'w', newline='') as csvfile:
     writer.writeheader()
 
     for repo in repos:
-        repo_details = get_repo_details(owner_name, repo['name'])
+        repo_details = get_repo_details(owner_name, repo['name'], headers)
         writer.writerow(repo_details)
