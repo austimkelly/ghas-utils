@@ -46,7 +46,25 @@ Make sure the repository exists and your GitHub token has the necessary permissi
 
 ### Output and Example
 
-Output is written to `github_data.csv` at the repository root. You can see an example in [./example/example_output.csv](./example/example_output.csv). This is just a basic example to give you an idea of the scehma.
+Output is written to `github_data.csv` at the repository root.  It looks something like this:
+
+```
+Getting list of repositories...
+Fetching repo security configs...
+CSV file 'github_data.csv' written successfully.
+Total repositories: 16
+Total public repositories: 16
+Percent of repositories that are forked: 0.0%
+Percent of repositories with Codeowners: 6.25%
+Percent of repositories with Secrets Scanning Enabled: 12.5%
+Percent of repositories with Secrets Push Protection Enabled: 12.5%
+Total number of open critical and high code scanning alerts: 0
+Total number of open critical dependabot alerts: 0
+Done.
+```
+
+
+You can see an example in [./example/example_output.csv](./example/example_output.csv). This is just a basic example to give you an idea of the scehma.
 
 # References
 
