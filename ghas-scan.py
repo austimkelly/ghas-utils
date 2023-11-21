@@ -1,6 +1,8 @@
 import csv
 import requests
 import os
+import base64
+import re
 
 # Set the GitHub owner type, owner name, and personal access token
 owner_type = 'user'  # Change to 'org' if needed
@@ -66,45 +68,98 @@ def get_dependabot_alerts(owner, repo_name, headers):
         num_low_dep_alerts
     )
 
+# API Ref: https://docs.github.com/en/rest/code-scanning/code-scanning
 def get_code_scanning_tool_names(owner, repo_name, headers):
-    url = "https://api.github.com/repos/" + owner + "/" + repo_name + "/code-scanning/analyses"
+    url = f'https://api.github.com/repos/{owner}/{repo_name}/code-scanning/analyses'
+    #print("Request URL:", url)
 
     try:
         response = requests.get(url, headers=headers)
-        if response.status_code == 404:
-            return "None"
         response.raise_for_status()  # Raises a HTTPError if the status is 4xx, 5xx
+
         data = response.json()
-        
+
         if data:
-            return data[0]['tool']['name']
+            # Extract unique tools from the analyses
+            tools = list(set(analysis['tool']['name'] for analysis in data))
+            return ', '.join(tools)
         else:
             return "No data received from the server"
     except requests.exceptions.HTTPError as http_err:
-        return f"HTTPError: {http_err}"
+        if response.status_code == 404:
+            return "None"
+        else:
+            return f"HTTPError: {http_err}"
     except Exception as err:
         return f"Error occurred: {err}"
 
-def is_secrets_scanning_enabled(owner, repo_name, headers):
-        secrets_scanning_url = f'https://api.github.com/repos/{owner}/{repo_name}/secret-scanning/alerts'
-        response = requests.get(secrets_scanning_url, headers=headers)
-        return len(response.json()) > 0
+# API Ref: https://docs.github.com/en/rest/reference/code-scanning#list-code-scanning-alerts-for-a-repository
+def get_code_scanning_alert_counts(owner, repo_name, headers):
+    # Get the code scanning alerts for the repository
+    url = f'https://api.github.com/repos/{owner}/{repo_name}/code-scanning/alerts'
+    response = requests.get(url, headers=headers)
+
+    code_scanning_critical_alert_count = 0
+    code_scanning_high_alert_count = 0
+    code_scanning_medium_alert_count = 0
+    code_scanning_low_alert_count = 0
+    code_scanning_warning_alert_count = 0
+    code_scanning_note_alert_count = 0
+    code_scanning_error_alert_count = 0
+
+    if response.status_code == 200:
+        alerts_data = response.json()
+
+        # Filter open code scanning alerts
+        open_alerts = [alert for alert in alerts_data if alert['state'] == 'open']
+
+        # Count alerts based on severity
+        for alert in open_alerts:
+            severity = alert['rule']['severity']
+            if severity == 'critical':
+                code_scanning_critical_alert_count += 1
+            elif severity == 'high':
+                code_scanning_high_alert_count += 1
+            elif severity == 'medium':
+                code_scanning_medium_alert_count += 1
+            elif severity == 'low':
+                code_scanning_low_alert_count += 1
+            elif severity == 'warning':
+                code_scanning_warning_alert_count += 1
+            elif severity == 'note':
+                code_scanning_note_alert_count += 1
+            elif severity == 'error':
+                code_scanning_error_alert_count += 1
+
+    return (
+        code_scanning_critical_alert_count,
+        code_scanning_high_alert_count,
+        code_scanning_medium_alert_count,
+        code_scanning_low_alert_count,
+        code_scanning_warning_alert_count,
+        code_scanning_note_alert_count,
+        code_scanning_error_alert_count
+    )
 
 def get_codeowners(owner, repo_name, headers):
     codeowners_locations = [
-        f'https://api.github.com/repos/{owner}/{repo_name}/CODEOWNERS',
-        f'https://api.github.com/repos/{owner}/{repo_name}/.github/CODEOWNERS',
-        f'https://api.github.com/repos/{owner}/{repo_name}/docs/CODEOWNERS'
+        f'https://api.github.com/repos/{owner}/{repo_name}/contents/CODEOWNERS',
+        f'https://api.github.com/repos/{owner}/{repo_name}/contents/.github/CODEOWNERS',
+        f'https://api.github.com/repos/{owner}/{repo_name}/contents/docs/CODEOWNERS'
     ]
 
     for location in codeowners_locations:
         codeowners_response = requests.get(location, headers=headers)
 
-        #print(f"Location: {location}, Status Code: {codeowners_response.status_code}")
-        
         if codeowners_response.status_code == 200:
-            codeowners = codeowners_response.text
-            return codeowners
+            codeowners_content = codeowners_response.json().get('content')
+            if codeowners_content is not None:
+                codeowners = base64.b64decode(codeowners_content).decode('utf-8')
+
+                # Remove comments from CODEOWNERS
+                codeowners_lines = [line for line in codeowners.split('\n') if not line.strip().startswith('#')]
+
+                return '\n'.join(codeowners_lines)
 
     return "Not found"
 
@@ -133,10 +188,25 @@ def get_repo_details(owner, repo_name, headers):
     is_archived = repo_info['archived']
 
     # Check if secrets scanning is enabled
-    secrets_scanning_enabled = is_secrets_scanning_enabled(owner, repo_name, headers)
+    security_and_analysis = repo_info.get('security_and_analysis', {})
+    #advanced_security = security_and_analysis.get('advanced_security', {})
+    secret_scanning = security_and_analysis.get('secret_scanning', {})
+    secret_scanning_push_protection = security_and_analysis.get('secret_scanning_push_protection', {})
 
+    # even though scheam docs say this exists, it doesn't
+    # https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repositories-for-a-user
+    # security_and_analysis_enabled = advanced_security.get('status') == 'enabled' if advanced_security else False
+    secret_scanning_enabled = secret_scanning.get('status') == 'enabled' if secret_scanning else False
+    secret_scanning_push_protection_enabled = secret_scanning_push_protection.get('status') == 'enabled' if secret_scanning_push_protection else False    
+    
     # Get names of code scanners
     code_scanners_enabled = get_code_scanning_tool_names(owner, repo_name, headers)
+
+    code_scanning_critical_alert_count,code_scanning_high_alert_count,code_scanning_medium_alert_count,code_scanning_low_alert_count,code_scanning_warning_alert_count,code_scanning_note_alert_count,code_scanning_error_alert_count = get_code_scanning_alert_counts(owner, repo_name, headers)
+
+    security_and_analysis_enabled = False
+    if code_scanners_enabled != "None":
+        security_and_analysis_enabled = True
 
     # Check the number of Dependabot alerts
     dependabot_enabled, open_alerts_count, num_critical_dep_alerts, num_high_dep_alerts, num_medium_dep_alerts, num_low_dep_alerts = get_dependabot_alerts(owner, repo_name, headers)
@@ -149,8 +219,17 @@ def get_repo_details(owner, repo_name, headers):
         'is_fork': is_fork,
         'is_private': is_private,
         'is_archived': is_archived,
-        'secrets_scanning_enabled': secrets_scanning_enabled,
+        'security_and_analysis_enabled': security_and_analysis_enabled,
+        'secret_scanning_enabled': secret_scanning_enabled,
+        'secret_scanning_push_protection_enabled': secret_scanning_push_protection_enabled,
         'code_scanners_enabled': code_scanners_enabled,
+        'code_scanning_critical_alert_count': code_scanning_critical_alert_count,
+        'code_scanning_high_alert_count': code_scanning_high_alert_count,
+        'code_scanning_medium_alert_count': code_scanning_medium_alert_count,
+        'code_scanning_low_alert_count': code_scanning_low_alert_count,
+        'code_scanning_warning_alert_count': code_scanning_warning_alert_count,
+        'code_scanning_note_alert_count': code_scanning_note_alert_count,
+        'code_scanning_error_alert_count': code_scanning_error_alert_count,
         'dependabot_enabled': dependabot_enabled,
         'dependabot_open_alerts_count': open_alerts_count,
         'num_critical_dep_alerts': num_critical_dep_alerts,
@@ -159,24 +238,7 @@ def get_repo_details(owner, repo_name, headers):
         'num_low_dep_alerts': num_low_dep_alerts
         # Add other details here
     }
-    return {
-        'repo_name': repo_info['name'],
-        'codeowners': codeowners,
-        'last_commit_date': last_commit_date,
-        'first_commit_date': first_commit_date,
-        'is_fork': is_fork,
-        'is_private': is_private,
-        'is_archived': is_archived,
-        'secrets_scanning_enabled': secrets_scanning_enabled,
-        'code_scanners_enabled': code_scanners_enabled,
-        'dependabot_enabled': dependabot_enabled,
-        'dependabot_open_alerts_count': open_alerts_count,
-        'num_critical_dep_alerts': num_critical_dep_alerts,
-        'num_high_dep_alerts': num_high_dep_alerts,
-        'num_medium_dep_alerts': num_medium_dep_alerts,
-        'num_low_dep_alerts': num_low_dep_alerts
-        # Add other details here
-    }
+   
 
 def get_repos(owner, headers, owner_type):
     if owner_type == 'user':
@@ -213,8 +275,17 @@ with open(csv_filename, 'w', newline='') as csvfile:
                   'is_fork', 
                   'is_private', 
                   'is_archived', 
-                  'secrets_scanning_enabled', 
+                    'security_and_analysis_enabled',
+                    'secret_scanning_enabled',
+                    'secret_scanning_push_protection_enabled',  
                   'code_scanners_enabled',
+                    'code_scanning_critical_alert_count',
+                    'code_scanning_high_alert_count',
+                    'code_scanning_medium_alert_count',
+                    'code_scanning_low_alert_count',
+                    'code_scanning_warning_alert_count',
+                    'code_scanning_note_alert_count',
+                    'code_scanning_error_alert_count',
                   'dependabot_enabled',
                   'dependabot_open_alerts_count',
                   'num_critical_dep_alerts',
