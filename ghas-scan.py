@@ -1,6 +1,8 @@
 import csv
 import requests
 import os
+import base64
+import re
 
 # Set the GitHub owner type, owner name, and personal access token
 owner_type = 'user'  # Change to 'org' if needed
@@ -66,6 +68,7 @@ def get_dependabot_alerts(owner, repo_name, headers):
         num_low_dep_alerts
     )
 
+# API Ref: https://docs.github.com/en/rest/code-scanning/code-scanning
 def get_code_scanning_tool_names(owner, repo_name, headers):
     url = f'https://api.github.com/repos/{owner}/{repo_name}/code-scanning/analyses'
     #print("Request URL:", url)
@@ -90,21 +93,73 @@ def get_code_scanning_tool_names(owner, repo_name, headers):
     except Exception as err:
         return f"Error occurred: {err}"
 
+# API Ref: https://docs.github.com/en/rest/reference/code-scanning#list-code-scanning-alerts-for-a-repository
+def get_code_scanning_alert_counts(owner, repo_name, headers):
+    # Get the code scanning alerts for the repository
+    url = f'https://api.github.com/repos/{owner}/{repo_name}/code-scanning/alerts'
+    response = requests.get(url, headers=headers)
+
+    code_scanning_critical_alert_count = 0
+    code_scanning_high_alert_count = 0
+    code_scanning_medium_alert_count = 0
+    code_scanning_low_alert_count = 0
+    code_scanning_warning_alert_count = 0
+    code_scanning_note_alert_count = 0
+    code_scanning_error_alert_count = 0
+
+    if response.status_code == 200:
+        alerts_data = response.json()
+
+        # Filter open code scanning alerts
+        open_alerts = [alert for alert in alerts_data if alert['state'] == 'open']
+
+        # Count alerts based on severity
+        for alert in open_alerts:
+            severity = alert['rule']['severity']
+            if severity == 'critical':
+                code_scanning_critical_alert_count += 1
+            elif severity == 'high':
+                code_scanning_high_alert_count += 1
+            elif severity == 'medium':
+                code_scanning_medium_alert_count += 1
+            elif severity == 'low':
+                code_scanning_low_alert_count += 1
+            elif severity == 'warning':
+                code_scanning_warning_alert_count += 1
+            elif severity == 'note':
+                code_scanning_note_alert_count += 1
+            elif severity == 'error':
+                code_scanning_error_alert_count += 1
+
+    return (
+        code_scanning_critical_alert_count,
+        code_scanning_high_alert_count,
+        code_scanning_medium_alert_count,
+        code_scanning_low_alert_count,
+        code_scanning_warning_alert_count,
+        code_scanning_note_alert_count,
+        code_scanning_error_alert_count
+    )
+
 def get_codeowners(owner, repo_name, headers):
     codeowners_locations = [
-        f'https://api.github.com/repos/{owner}/{repo_name}/CODEOWNERS',
-        f'https://api.github.com/repos/{owner}/{repo_name}/.github/CODEOWNERS',
-        f'https://api.github.com/repos/{owner}/{repo_name}/docs/CODEOWNERS'
+        f'https://api.github.com/repos/{owner}/{repo_name}/contents/CODEOWNERS',
+        f'https://api.github.com/repos/{owner}/{repo_name}/contents/.github/CODEOWNERS',
+        f'https://api.github.com/repos/{owner}/{repo_name}/contents/docs/CODEOWNERS'
     ]
 
     for location in codeowners_locations:
         codeowners_response = requests.get(location, headers=headers)
 
-        #print(f"Location: {location}, Status Code: {codeowners_response.status_code}")
-        
         if codeowners_response.status_code == 200:
-            codeowners = codeowners_response.text
-            return codeowners
+            codeowners_content = codeowners_response.json().get('content')
+            if codeowners_content is not None:
+                codeowners = base64.b64decode(codeowners_content).decode('utf-8')
+
+                # Remove comments from CODEOWNERS
+                codeowners_lines = [line for line in codeowners.split('\n') if not line.strip().startswith('#')]
+
+                return '\n'.join(codeowners_lines)
 
     return "Not found"
 
@@ -147,6 +202,8 @@ def get_repo_details(owner, repo_name, headers):
     # Get names of code scanners
     code_scanners_enabled = get_code_scanning_tool_names(owner, repo_name, headers)
 
+    code_scanning_critical_alert_count,code_scanning_high_alert_count,code_scanning_medium_alert_count,code_scanning_low_alert_count,code_scanning_warning_alert_count,code_scanning_note_alert_count,code_scanning_error_alert_count = get_code_scanning_alert_counts(owner, repo_name, headers)
+
     security_and_analysis_enabled = False
     if code_scanners_enabled != "None":
         security_and_analysis_enabled = True
@@ -166,6 +223,13 @@ def get_repo_details(owner, repo_name, headers):
         'secret_scanning_enabled': secret_scanning_enabled,
         'secret_scanning_push_protection_enabled': secret_scanning_push_protection_enabled,
         'code_scanners_enabled': code_scanners_enabled,
+        'code_scanning_critical_alert_count': code_scanning_critical_alert_count,
+        'code_scanning_high_alert_count': code_scanning_high_alert_count,
+        'code_scanning_medium_alert_count': code_scanning_medium_alert_count,
+        'code_scanning_low_alert_count': code_scanning_low_alert_count,
+        'code_scanning_warning_alert_count': code_scanning_warning_alert_count,
+        'code_scanning_note_alert_count': code_scanning_note_alert_count,
+        'code_scanning_error_alert_count': code_scanning_error_alert_count,
         'dependabot_enabled': dependabot_enabled,
         'dependabot_open_alerts_count': open_alerts_count,
         'num_critical_dep_alerts': num_critical_dep_alerts,
@@ -215,6 +279,13 @@ with open(csv_filename, 'w', newline='') as csvfile:
                     'secret_scanning_enabled',
                     'secret_scanning_push_protection_enabled',  
                   'code_scanners_enabled',
+                    'code_scanning_critical_alert_count',
+                    'code_scanning_high_alert_count',
+                    'code_scanning_medium_alert_count',
+                    'code_scanning_low_alert_count',
+                    'code_scanning_warning_alert_count',
+                    'code_scanning_note_alert_count',
+                    'code_scanning_error_alert_count',
                   'dependabot_enabled',
                   'dependabot_open_alerts_count',
                   'num_critical_dep_alerts',
