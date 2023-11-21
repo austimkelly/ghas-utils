@@ -2,7 +2,7 @@ import csv
 import requests
 import os
 import base64
-import re
+import pandas as pd
 
 # Set the GitHub owner type, owner name, and personal access token
 owner_type = 'user'  # Change to 'org' if needed
@@ -15,6 +15,27 @@ skip_forks = True
 
 # Set up headers with the access token
 headers = {'Authorization': f'token {access_token}'}
+
+def print_aggregated_metrics_from_csv(csv_file):
+    df = pd.read_csv(csv_file)
+
+    total_repos = len(df)
+    public_repos = len(df[df['is_private'] == False])
+    forked_repos = len(df[df['is_fork'] == True])
+    repos_with_codeowners = len(df[df['codeowners'].notna() & (df['codeowners'] != 'Not found') & (df['codeowners'] != '')])
+    repos_with_secrets_scanning = len(df[df['secret_scanning_enabled'] == True])
+    repos_with_secrets_push_protection = len(df[df['secret_scanning_push_protection_enabled'] == True])
+    open_critical_high_alerts = df['code_scanning_critical_alert_count'].sum() + df['code_scanning_high_alert_count'].sum()
+    open_critical_dependabot_alerts = df['num_critical_dep_alerts'].sum()
+
+    print(f"Total repositories: {total_repos}")
+    print(f"Total public repositories: {public_repos}")
+    print(f"Percent of repositories that are forked: {forked_repos / total_repos * 100}%")
+    print(f"Percent of repositories with Codeowners: {repos_with_codeowners / total_repos * 100}%")
+    print(f"Percent of repositories with Secrets Scanning Enabled: {repos_with_secrets_scanning / total_repos * 100}%")
+    print(f"Percent of repositories with Secrets Push Protection Enabled: {repos_with_secrets_push_protection / total_repos * 100}%")
+    print(f"Total number of open critical and high code scanning alerts: {open_critical_high_alerts}")
+    print(f"Total number of open critical dependabot alerts: {open_critical_dependabot_alerts}")
 
 def get_dependabot_alerts(owner, repo_name, headers):
     dependabot_url = f'https://api.github.com/repos/{owner}/{repo_name}/dependabot/alerts'
@@ -263,6 +284,7 @@ def get_repos(owner, headers, owner_type):
         raise Exception(f"Failed to fetch repositories. Status code: {response.status_code}, Response: {response.text}")
 
 # Get list of repositories for the user or organization
+print("Getting list of repositories...")
 repos = get_repos(owner_name, headers, owner_type)
 
 # Write data to CSV
@@ -297,6 +319,16 @@ with open(csv_filename, 'w', newline='') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
 
+    print("Fetching repo security configs... (this may take a while))")
     for repo in repos:
         repo_details = get_repo_details(owner_name, repo['name'], headers)
         writer.writerow(repo_details)
+    
+    csvfile.close()
+    print(f"CSV file '{csv_filename}' written successfully.")
+
+    with open(csv_filename, 'r') as csvfile:
+        print_aggregated_metrics_from_csv(csvfile)
+        csvfile.close()
+
+    print("Done.")
