@@ -67,21 +67,26 @@ def get_dependabot_alerts(owner, repo_name, headers):
     )
 
 def get_code_scanning_tool_names(owner, repo_name, headers):
-    url = "https://api.github.com/repos/" + owner + "/" + repo_name + "/code-scanning/analyses"
+    url = f'https://api.github.com/repos/{owner}/{repo_name}/code-scanning/analyses'
+    #print("Request URL:", url)
 
     try:
         response = requests.get(url, headers=headers)
-        if response.status_code == 404:
-            return "None"
         response.raise_for_status()  # Raises a HTTPError if the status is 4xx, 5xx
+
         data = response.json()
-        
+
         if data:
-            return data[0]['tool']['name']
+            # Extract unique tools from the analyses
+            tools = list(set(analysis['tool']['name'] for analysis in data))
+            return ', '.join(tools)
         else:
             return "No data received from the server"
     except requests.exceptions.HTTPError as http_err:
-        return f"HTTPError: {http_err}"
+        if response.status_code == 404:
+            return "Code scanning not set up for this repository."
+        else:
+            return f"HTTPError: {http_err}"
     except Exception as err:
         return f"Error occurred: {err}"
 
