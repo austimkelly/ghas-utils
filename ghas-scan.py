@@ -84,16 +84,11 @@ def get_code_scanning_tool_names(owner, repo_name, headers):
             return "No data received from the server"
     except requests.exceptions.HTTPError as http_err:
         if response.status_code == 404:
-            return "Code scanning not set up for this repository."
+            return "None"
         else:
             return f"HTTPError: {http_err}"
     except Exception as err:
         return f"Error occurred: {err}"
-
-def is_secrets_scanning_enabled(owner, repo_name, headers):
-        secrets_scanning_url = f'https://api.github.com/repos/{owner}/{repo_name}/secret-scanning/alerts'
-        response = requests.get(secrets_scanning_url, headers=headers)
-        return len(response.json()) > 0
 
 def get_codeowners(owner, repo_name, headers):
     codeowners_locations = [
@@ -138,10 +133,23 @@ def get_repo_details(owner, repo_name, headers):
     is_archived = repo_info['archived']
 
     # Check if secrets scanning is enabled
-    secrets_scanning_enabled = is_secrets_scanning_enabled(owner, repo_name, headers)
+    security_and_analysis = repo_info.get('security_and_analysis', {})
+    #advanced_security = security_and_analysis.get('advanced_security', {})
+    secret_scanning = security_and_analysis.get('secret_scanning', {})
+    secret_scanning_push_protection = security_and_analysis.get('secret_scanning_push_protection', {})
 
+    # even though scheam docs say this exists, it doesn't
+    # https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repositories-for-a-user
+    # security_and_analysis_enabled = advanced_security.get('status') == 'enabled' if advanced_security else False
+    secret_scanning_enabled = secret_scanning.get('status') == 'enabled' if secret_scanning else False
+    secret_scanning_push_protection_enabled = secret_scanning_push_protection.get('status') == 'enabled' if secret_scanning_push_protection else False    
+    
     # Get names of code scanners
     code_scanners_enabled = get_code_scanning_tool_names(owner, repo_name, headers)
+
+    security_and_analysis_enabled = False
+    if code_scanners_enabled != "None":
+        security_and_analysis_enabled = True
 
     # Check the number of Dependabot alerts
     dependabot_enabled, open_alerts_count, num_critical_dep_alerts, num_high_dep_alerts, num_medium_dep_alerts, num_low_dep_alerts = get_dependabot_alerts(owner, repo_name, headers)
@@ -154,7 +162,9 @@ def get_repo_details(owner, repo_name, headers):
         'is_fork': is_fork,
         'is_private': is_private,
         'is_archived': is_archived,
-        'secrets_scanning_enabled': secrets_scanning_enabled,
+        'security_and_analysis_enabled': security_and_analysis_enabled,
+        'secret_scanning_enabled': secret_scanning_enabled,
+        'secret_scanning_push_protection_enabled': secret_scanning_push_protection_enabled,
         'code_scanners_enabled': code_scanners_enabled,
         'dependabot_enabled': dependabot_enabled,
         'dependabot_open_alerts_count': open_alerts_count,
@@ -164,24 +174,7 @@ def get_repo_details(owner, repo_name, headers):
         'num_low_dep_alerts': num_low_dep_alerts
         # Add other details here
     }
-    return {
-        'repo_name': repo_info['name'],
-        'codeowners': codeowners,
-        'last_commit_date': last_commit_date,
-        'first_commit_date': first_commit_date,
-        'is_fork': is_fork,
-        'is_private': is_private,
-        'is_archived': is_archived,
-        'secrets_scanning_enabled': secrets_scanning_enabled,
-        'code_scanners_enabled': code_scanners_enabled,
-        'dependabot_enabled': dependabot_enabled,
-        'dependabot_open_alerts_count': open_alerts_count,
-        'num_critical_dep_alerts': num_critical_dep_alerts,
-        'num_high_dep_alerts': num_high_dep_alerts,
-        'num_medium_dep_alerts': num_medium_dep_alerts,
-        'num_low_dep_alerts': num_low_dep_alerts
-        # Add other details here
-    }
+   
 
 def get_repos(owner, headers, owner_type):
     if owner_type == 'user':
@@ -218,7 +211,9 @@ with open(csv_filename, 'w', newline='') as csvfile:
                   'is_fork', 
                   'is_private', 
                   'is_archived', 
-                  'secrets_scanning_enabled', 
+                    'security_and_analysis_enabled',
+                    'secret_scanning_enabled',
+                    'secret_scanning_push_protection_enabled',  
                   'code_scanners_enabled',
                   'dependabot_enabled',
                   'dependabot_open_alerts_count',
