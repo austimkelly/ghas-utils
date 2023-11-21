@@ -1,0 +1,17 @@
+repo_name,codeowners,last_commit_date,first_commit_date,is_fork,is_private,is_archived,security_and_analysis_enabled,secret_scanning_enabled,secret_scanning_push_protection_enabled,code_scanners_enabled,code_scanning_critical_alert_count,code_scanning_high_alert_count,code_scanning_medium_alert_count,code_scanning_low_alert_count,code_scanning_warning_alert_count,code_scanning_note_alert_count,code_scanning_error_alert_count,dependabot_enabled,dependabot_open_alerts_count,num_critical_dep_alerts,num_high_dep_alerts,num_medium_dep_alerts,num_low_dep_alerts
+bv-ios-sdk,Not found,2015-10-12T19:09:08Z,2015-09-25T18:58:29Z,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,None,0,0,0,0,0,0,0,FALSE,0,0,0,0,0
+DVWA,Not found,2023-11-08T15:53:38Z,2023-11-08T02:30:31Z,TRUE,FALSE,FALSE,TRUE,TRUE,TRUE,"PHP Security Analysis, Security Audit for Infrastructure, PHP Security Audit, CodeQL",0,0,0,0,0,2,28,FALSE,0,0,0,0,0
+flutter_hello_world,Not found,2022-10-11T02:10:31Z,2022-10-11T02:04:07Z,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,None,0,0,0,0,0,0,0,FALSE,0,0,0,0,0
+ghas-utils,"
+
+* @austimkelly",2023-11-21T02:11:49Z,2023-11-18T16:48:53Z,FALSE,FALSE,FALSE,TRUE,TRUE,TRUE,CodeQL,0,0,0,0,0,0,0,TRUE,0,0,0,0,0
+jQuery-Autocomplete,Not found,2015-06-24T21:23:47Z,2015-06-24T21:15:43Z,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,None,0,0,0,0,0,0,0,FALSE,0,0,0,0,0
+MKNetworkKit,Not found,2014-05-26T19:38:46Z,2014-05-26T19:13:38Z,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,None,0,0,0,0,0,0,0,FALSE,0,0,0,0,0
+NodeGoat,Not found,2023-03-18T12:37:32Z,2023-04-12T14:45:28Z,TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,None,0,0,0,0,0,0,0,FALSE,0,0,0,0,0
+pp14parser,Not found,2014-07-14T14:05:07Z,2014-07-11T17:19:22Z,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,None,0,0,0,0,0,0,0,FALSE,0,0,0,0,0
+pr-practice,Not found,2022-12-02T19:23:47Z,2022-11-11T18:47:06Z,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,None,0,0,0,0,0,0,0,FALSE,0,0,0,0,0
+rekon,Not found,2023-11-18T17:30:43Z,2023-09-22T15:02:20Z,FALSE,FALSE,FALSE,TRUE,TRUE,TRUE,CodeQL,0,0,0,0,0,0,0,TRUE,1,0,0,1,0
+riverdata,Not found,2023-09-22T17:00:25Z,2022-09-20T01:31:34Z,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,None,0,0,0,0,0,0,0,FALSE,0,0,0,0,0
+riverdata-alrudiny,Not found,2023-11-06T19:03:50Z,2023-09-30T21:08:12Z,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,None,0,0,0,0,0,0,0,FALSE,0,0,0,0,0
+snyk-automatic-ticketing,Not found,2023-08-11T13:23:59Z,2023-08-10T15:15:54Z,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,None,0,0,0,0,0,0,0,FALSE,0,0,0,0,0
+terragoat,Not found,2021-12-08T14:18:34Z,2021-12-08T14:17:19Z,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,tfsec,0,0,0,0,0,0,0,FALSE,0,0,0,0,0
