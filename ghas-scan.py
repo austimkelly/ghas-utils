@@ -3,15 +3,18 @@ import requests
 import os
 import base64
 import pandas as pd
+import time
 
 # Set the GitHub owner type, owner name, and personal access token
-owner_type = 'user'  # Change to 'org' if needed
+owner_type = 'user'  # Options are 'org' or 'user'
 owner_name = 'austimkelly'
 # Get the access token from the environment variable
 access_token = os.environ.get('GITHUB_ACCESS_TOKEN')
+if not access_token:
+    raise Exception("Access token is missing or empty. Please set the GITHUB_ACCESS_TOKEN environment variable.")
 
 # Include or don't include forked repositories?
-skip_forks = True
+skip_forks = False
 
 # Set up headers with the access token
 headers = {'Authorization': f'token {access_token}'}
@@ -214,7 +217,7 @@ def get_repo_details(owner, repo_name, headers):
     secret_scanning = security_and_analysis.get('secret_scanning', {})
     secret_scanning_push_protection = security_and_analysis.get('secret_scanning_push_protection', {})
 
-    # even though scheam docs say this exists, it doesn't
+    # even though schema docs say this exists, it doesn't
     # https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repositories-for-a-user
     # security_and_analysis_enabled = advanced_security.get('status') == 'enabled' if advanced_security else False
     secret_scanning_enabled = secret_scanning.get('status') == 'enabled' if secret_scanning else False
@@ -283,6 +286,9 @@ def get_repos(owner, headers, owner_type):
     else:
         raise Exception(f"Failed to fetch repositories. Status code: {response.status_code}, Response: {response.text}")
 
+# Get the start time
+start_time = time.time()
+
 # Get list of repositories for the user or organization
 print("Getting list of repositories...")
 repos = get_repos(owner_name, headers, owner_type)
@@ -290,17 +296,19 @@ repos = get_repos(owner_name, headers, owner_type)
 # Write data to CSV
 csv_filename = 'github_data.csv'
 with open(csv_filename, 'w', newline='') as csvfile:
-    fieldnames = ['repo_name', 
-                  'codeowners', 
-                  'last_commit_date', 
-                  'first_commit_date', 
-                  'is_fork', 
-                  'is_private', 
-                  'is_archived', 
+    fieldnames = ['repo_name',
+                    'owner_type',
+                    'owner_name', 
+                    'codeowners', 
+                    'last_commit_date', 
+                    'first_commit_date', 
+                    'is_fork', 
+                    'is_private', 
+                    'is_archived', 
                     'security_and_analysis_enabled',
                     'secret_scanning_enabled',
                     'secret_scanning_push_protection_enabled',  
-                  'code_scanners_enabled',
+                    'code_scanners_enabled',
                     'code_scanning_critical_alert_count',
                     'code_scanning_high_alert_count',
                     'code_scanning_medium_alert_count',
@@ -308,12 +316,12 @@ with open(csv_filename, 'w', newline='') as csvfile:
                     'code_scanning_warning_alert_count',
                     'code_scanning_note_alert_count',
                     'code_scanning_error_alert_count',
-                  'dependabot_enabled',
-                  'dependabot_open_alerts_count',
-                  'num_critical_dep_alerts',
-                  'num_high_dep_alerts',
-                  'num_medium_dep_alerts',
-                  'num_low_dep_alerts',]
+                    'dependabot_enabled',
+                    'dependabot_open_alerts_count',
+                    'num_critical_dep_alerts',
+                    'num_high_dep_alerts',
+                    'num_medium_dep_alerts',
+                    'num_low_dep_alerts',]
     
     # Add other fieldnames here
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -322,6 +330,11 @@ with open(csv_filename, 'w', newline='') as csvfile:
     print("Fetching repo security configs... (this may take a while))")
     for repo in repos:
         repo_details = get_repo_details(owner_name, repo['name'], headers)
+        
+        # Add the owner_type and owner_name to the repo_details
+        repo_details['owner_type'] = owner_type
+        repo_details['owner_name'] = owner_name
+        
         writer.writerow(repo_details)
     
     csvfile.close()
@@ -331,4 +344,15 @@ with open(csv_filename, 'w', newline='') as csvfile:
         print_aggregated_metrics_from_csv(csvfile)
         csvfile.close()
 
-    print("Done.")
+# Get the end time
+end_time = time.time()
+
+# Calculate the elapsed time
+elapsed_time = end_time - start_time
+hours, rem = divmod(elapsed_time, 3600)
+minutes, seconds = divmod(rem, 60)
+
+# Print the elapsed time
+print(f"Elapsed Time: {int(hours)} hours, {int(minutes)} min, {int(seconds)} seconds")
+
+print("Done.")

@@ -1,4 +1,4 @@
-github_data.csv
+github_data*.csv
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
