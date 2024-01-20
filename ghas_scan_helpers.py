@@ -293,6 +293,9 @@ def get_repos(owner, headers, owner_type, skip_forks=False):
     if response.status_code == 200:
         repos = response.json()
 
+        # print the number of repos found in the response array
+        print(f"Number of repos found for {owner}: {len(repos)}")
+
         # Filter out forked repositories
         if skip_forks:
             non_forked_repos = [repo for repo in repos if not repo['fork']]

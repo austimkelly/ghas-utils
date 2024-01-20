@@ -72,8 +72,10 @@ with open(csv_filename, 'w', newline='') as csvfile:
         repo_details = get_repo_details(repo['owner']['login'], repo['name'], headers)
         
          # If repo_details is None, skip this iteration
-         # Sometimes a repo can be listed buy meta-info cannot be retrieved 
+         # Sometimes a repo can be listed but meta-info cannot be retrieved 
         if repo_details is None:
+            # print repo name we are skipping
+            print(f"Skipping repo with no information: {repo['name']}")
             continue
 
         # Add the owner_type and owner_name to the repo_details
