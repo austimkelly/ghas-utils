@@ -65,7 +65,6 @@ Total number of open critical dependabot alerts: 0
 Done.
 ```
 
-
 You can see an example in [./example/example_output.csv](./example/example_output.csv). This is just a basic example to give you an idea of the scehma.
 
 # References
