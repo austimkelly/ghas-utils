@@ -1,5 +1,6 @@
 github_data*.csv
 .DS_Store
+secret_scanning_alerts*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
