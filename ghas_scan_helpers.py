@@ -195,6 +195,7 @@ def get_repo_details(owner, repo_name, headers):
     # If the repository was not found, log the repository name and owner and return None
     if response.status_code == 404:
         print(f"Repository {repo_name} of owner {owner} not found. It will be skipped.")
+        print(f"Response: {repo_info}")
         return None
     
     # Print the repo_info dictionary
@@ -284,7 +285,7 @@ def get_repos(owner, headers, owner_type, skip_forks=False):
     if owner_type == 'user':
         repos_url = f'https://api.github.com/users/{owner}/repos'
     elif owner_type == 'org':
-        repos_url = f'https://api.github.com/orgs/{owner}/repos'
+        repos_url = f'https://api.github.com/orgs/{owner}/repos?type=internal'
     else:
         raise ValueError("Invalid owner type. Use 'user' or 'org'.")
 
