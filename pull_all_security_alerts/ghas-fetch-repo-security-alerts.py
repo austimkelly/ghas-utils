@@ -2,7 +2,7 @@ import requests
 import csv
 
 # Configuration
-GITHUB_TOKEN = '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'
+GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN'
 REPO_OWNER = 'austimkelly'
 REPO_NAME = 'swiss-cheese'
 HEADERS = {
