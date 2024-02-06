@@ -99,5 +99,22 @@ erDiagram
         push_protection_bypassed_by varchar
         push_protection_bypassed_at datetime
     }
+
+    SECURITY-ADVISORIES {
+        ghsa_id varchar
+        cve_id varchar
+        url varchar
+        html_url varchar
+        summary varchar
+        description varchar
+        severity varchar
+        author varchar
+        publisher varchar
+        state varchar
+        created_at datetime
+        updated_at datetime
+        published_at datetime
+    }
+
 ```
 

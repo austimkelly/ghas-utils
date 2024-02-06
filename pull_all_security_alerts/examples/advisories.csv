@@ -1,0 +1,80 @@
+ghsa_id,cve_id,url,html_url,summary,description,severity,author,publisher,state,created_at,updated_at,published_at
+GHSA-897j-wghw-fjcx,CVE-2021-44228,https://api.github.com/repos/austimkelly/swiss-cheese/security-advisories/GHSA-897j-wghw-fjcx,https://github.com/austimkelly/swiss-cheese/security/advisories/GHSA-897j-wghw-fjcx,Supply Chain Advisory: log4j (Demonstration Purposes Only),"### Impact
+_What kind of vulnerability is it? Who is impacted?_
+
+log4j dependency is out of date. See also GitHub advisory: https://github.com/advisories/GHSA-v57x-gxfj-484q
+
+### Patches
+_Has the problem been patched? What versions should users upgrade to?_
+
+Per the CVE (https://nvd.nist.gov/vuln/detail/CVE-2021-44228), clients should update to 2.17.1 of the log4j dependency immediately. There has been multiple incomplete fixes. See https://github.com/advisories/GHSA-v57x-gxfj-484q for details on the various patch attempts
+
+### Workarounds
+_Is there a way for users to fix or remediate the vulnerability without upgrading?_
+
+Disabling lookups via Environment Variable
+Setting the environment variable LOG4J_FORMAT_MSG_NO_LOOKUPS=true .
+This option is the easiest to apply for containerized environments.
+
+Disabling lookups in log4j2 configuration
+Another good option since there is no need to replace JARs or no need to modify logging configuration file, users who cannot upgrade to 2.17.0 can mitigate the exposure by:
+
+Users of Log4j 2.10 or greater may add -Dlog4j2.formatMsgNoLookups=true as a command line option or add -Dlog4j2.formatMsgNoLookups=true in a log4j2.component.properties file on the classpath to prevent lookups in log event messages.
+Users since Log4j 2.7 may specify %m{nolookups} in the PatternLayout configuration to prevent lookups in log event messages.
+As an example; users deploying Hazelcast Management Center via helm charts can do the following to disable lookups and restart in one command:
+
+helm upgrade <release-name> hazelcast/hazelcast --set mancenter.javaOpts=""<javaOpts> -Dlog4j2.formatMsgNoLookups=true""
+
+Where is the release name and is existing java options user has added previously.
+
+Removing the JndiLookup from classpath
+Remove the JndiLookup and JndiManager classes from the log4j-core jar. Note that removal of the JndiManager will cause the JndiContextSelector and JMSAppender to no longer function.
+
+### References
+_Are there any links users can visit to find out more?_
+
+Please see Dependabot PRs:
+
+* https://github.com/austimkelly/swiss-cheese/pull/17
+
+Associated Dependabot alerts for this PR can be found in: https://github.com/austimkelly/swiss-cheese/security/dependabot?q=is%3Aopen+log4j
+",critical,austimkelly,austimkelly,published,2024-01-10T18:22:00Z,2024-01-10T18:24:31Z,2024-01-10T18:24:31Z
+GHSA-x2j5-6fv4-fxc2,CVE-2023-26492,https://api.github.com/repos/austimkelly/swiss-cheese/security-advisories/GHSA-x2j5-6fv4-fxc2,https://github.com/austimkelly/swiss-cheese/security/advisories/GHSA-x2j5-6fv4-fxc2,SSRF found in ssrf.py (This is just a demo of a security advisory),"## Summary
+
+This is only a demo for an advisory. This uses existing CVE and CWE Ids to avoid requesting a CVE from GitHub.
+
+### References
+
+* https://github.com/advisories - Github Security Advisory Database
+* https://docs.github.com/en/code-security/security-advisories - Working with Security Advisories
+
+### Impact
+_What kind of vulnerability is it? Who is impacted?_
+
+SSRF vulnerability detected in python source code.
+
+## Source Reference
+
+https://github.com/austimkelly/swiss-cheese/blob/main/ssrf/ssrf.py#L10
+
+We also have a code scanning reference here: https://github.com/austimkelly/swiss-cheese/security/code-scanning/4
+
+## Reproducible
+
+1. In `/ssrf` run `python3 ssrf.py`
+2. Run http://127.0.0.1:5000/follow?url=https://api.github.com/events in your browser.
+3. If the `url` parameter is executed, fail.
+
+### Patches
+_Has the problem been patched? What versions should users upgrade to?_
+
+A code update has not yet been provided.
+
+### Workarounds
+_Is there a way for users to fix or remediate the vulnerability without upgrading?_
+
+At this point there does not appear to be a mitigation without fixing and deploying the offending code
+
+### References
+_Are there any links users can visit to find out more?_
+",high,austimkelly,austimkelly,published,2024-01-10T13:59:24Z,2024-01-10T14:53:21Z,2024-01-10T14:53:21Z

@@ -2,7 +2,7 @@ import requests
 import csv
 
 # Configuration
-GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN'
+GITHUB_TOKEN = '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'
 REPO_OWNER = 'austimkelly'
 REPO_NAME = 'swiss-cheese'
 HEADERS = {
@@ -27,6 +27,18 @@ def flatten_dict(dd, separator='_', prefix=''):
     # If dd is not a dictionary, it simply returns a dictionary with a single item. The key is the prefix and the value is dd.
     } if isinstance(dd, dict) else { prefix : dd }
 
+
+def parse_advisory_results_to_csv(advisories):
+    # Define the CSV file
+    with open('advisories.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        # Write the header
+        writer.writerow(["ghsa_id", "cve_id", "url", "html_url", "summary", "description", "severity", "author", "publisher", "state", "created_at", "updated_at", "published_at"])
+        # Write the data
+        for advisory in advisories:
+            writer.writerow([advisory['ghsa_id'], advisory['cve_id'], advisory['url'], advisory['html_url'], advisory['summary'], advisory['description'], advisory['severity'], advisory['author']['login'], advisory['publisher']['login'], advisory['state'], advisory['created_at'], advisory['updated_at'], advisory['published_at']])
+    
+    print("Security advisories have been written to advisories.csv")
 
 def parse_dependabot_alerts_to_csv(dependabot_alerts):
     # Define the CSV file
@@ -116,6 +128,15 @@ def get_dependabot_alerts():
         print(f"Error in get_dependabot_alerts: Received status code {response.status_code} with response: {response.text}")
         return None
 
+def get_security_advisories():
+    url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/security-advisories'
+    response = requests.get(url, headers=HEADERS)
+    if response.status_code == 200 and response.text.strip():
+        return response.json()
+    else:
+        print(f"Error in get_security_advisories: Received status code {response.status_code} with response: {response.text}")
+        return None
+
 def main():
     secret_alerts = get_secret_scanning_alerts()
     code_alerts = get_code_scanning_alerts()
@@ -141,6 +162,13 @@ def main():
     else:
         #print(dependabot_alerts)
         parse_dependabot_alerts_to_csv(dependabot_alerts)
+
+    print("\nSecurity Advisories:")
+    security_advisories = get_security_advisories()
+    if security_advisories is None:
+        print("No data available")
+    else:
+        parse_advisory_results_to_csv(security_advisories)
 
 if __name__ == "__main__":
     main()
