@@ -5,7 +5,7 @@ from ghas_scan_helpers import get_repos, get_repo_details, print_aggregated_metr
 
 # Set the GitHub owner type, owner name, and personal access token
 owner_type = 'user'  # Options are 'org' or 'user'
-owner_names = ['austimkelly']
+owner_names = ['swell-consulting']
 
 # Get the access token from the environment variable
 access_token = os.environ.get('GITHUB_ACCESS_TOKEN')
@@ -67,7 +67,7 @@ with open(csv_filename, 'w', newline='') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
 
-    print("Fetching repo security configs... (this may take a while))")
+    print(f"Fetching repo security configs for {owner_name} . . . (this may take a while))")
     for repo in all_repos:
         repo_details = get_repo_details(repo['owner']['login'], repo['name'], headers)
         
@@ -88,7 +88,12 @@ with open(csv_filename, 'w', newline='') as csvfile:
     print(f"CSV file '{csv_filename}' written successfully.")
 
     with open(csv_filename, 'r') as csvfile:
-        print_aggregated_metrics_from_csv(csvfile)
+        lines = csvfile.readlines()
+        if len(lines) <= 1:
+            print(f"ERROR: File {csv_filename} is empty or only contains headers")
+        else:
+            print_aggregated_metrics_from_csv(csvfile)
+        
         csvfile.close()
 
 # Get the end time
