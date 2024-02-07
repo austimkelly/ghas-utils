@@ -8,10 +8,10 @@ The GitHub Advanced Security (GHAS) suite of tools provide valuable analysis and
 
 This article will provide an overview of steps you can take to build your own security reporting strategy using the GHAS Security Overview and Alert reporting as well as considerations for building your own custom reporting. We'll start our GHAS reporting strategy with four primary questions to answer before you formalize a strategy and being to build, report, and take action on your security alerts.
 
-* What questions are you trying to answer?
-* What reporting exists to answer these questions?
-* Who has access to the reporting?
-* Do we need to consider any custom reporting?
+* [What questions are you trying to answer?](#what-questions-are-you-trying-to-answer)
+* [What GHAS reporting exists to answer these questions?](#what-ghas-reporting-exists-to-answer-these-questions)
+* [Who has access to the built-in GHAS reporting?](#who-has-access-to-the-built-in-ghas-reporting)
+* [Do we need to consider any custom reporting?](#do-we-need-to-consider-any-custom-reporting)
 
 The article will help you devise a strategy to quickly answer these questions. However, before we start, you should be aware of some references that are part of the scope of this article.
 
@@ -43,13 +43,13 @@ For example, consider secrets push protection and insight. The action would be a
 * If a valid secret, work with the developer to remove the secret from the codebase and rotate the secret.
 * If it's a legitimate bypass, consider other bypass patterns and if you can build exclusion roles (e.g. for unit tets).
 
-## What reporting exists to answer these questions?
+## What GHAS reporting exists to answer these questions?
 
 The next step in building a reporting strategy is to understand what reporting is available to you "out-of-the-box". Github Advanced Security has excellent reporting capabilities documented (see References). It can be difficult to get a bird's eye view of the reporting feature across Enterprise, Organization, and Repository scopes. I've built a template in a Google Sheet: [GHAS Security Reporting Capabilities](https://docs.google.com/spreadsheets/d/1gZz0dPl6jLYyNqhglIyzkoy-oq_Q38wh3xx6_WKW8sg/edit#gid=0) that provides a flattened view of what metrics are available for each scope. A scope is defined as the ownership level: Enterprise, Organization, or Repository. By comparing your own questions and desired insights against existing capabilities you can get a quick glimpse of what you can get out-of-the-box versus what you would need to build custom reporting for.
 
 ![Reporting Capabilities Image](./img/reporting_capabilities_checklist.png)
 
-## Who has access to the built-in reporting?
+## Who has access to the built-in GHAS reporting?
 
 Once you know the level of built-in reporting by scopes, you need to determine who gets access to reporting. This is generally described in the [Permission to view data in security overview](https://docs.github.com/en/enterprise-cloud@latest/code-security/security-overview/about-security-overview#permission-to-view-data-in-security-overview), however I provide a flattened view of all the permissions in [Security Reporting Permissions](https://docs.google.com/spreadsheets/d/1gZz0dPl6jLYyNqhglIyzkoy-oq_Q38wh3xx6_WKW8sg/edit#gid=486941505) (a Google Sheet).
 
@@ -61,7 +61,7 @@ Understanding who needs access will help you build your report visibility strate
 
 At the last stage we should have pretty good idea of the insights we needs, what we can get out of the box, and who needs to get access to them. You can now perform a gap analysis and determine if the ROI is of value to build custom reporting. I'm assuming you will use the REST API to retrieve data to build custom reporting, or leverage Webhooks to push data to a third-party reporting tool or SIEM.
 
-### Leverage Existing Infrastructure
+### Leverage Existing Analytics & Reporting Infrastructure
 
 Some considerations that may help you accelerate your custom reporting strategy technical rollout:
 
@@ -72,7 +72,7 @@ Some considerations that may help you accelerate your custom reporting strategy 
 * What does the freshness of your data need to be? (Hourly, Daily, Weekly?)
 * What data visualization tools are available to you?
 
-### Evaluating the Schema
+### Evaluate the Github Alert Schemas
 
 Knowing your schema is critical to review against what you want to report on. Github does not publish a know schema, but it can be easily derived from the REST API. I've provided a flattened view of the schema in this Google Sheet: [Security Alerts REST Response Schema](hhttps://docs.google.com/spreadsheets/d/1gZz0dPl6jLYyNqhglIyzkoy-oq_Q38wh3xx6_WKW8sg/edit#gid=1731893230). Here you can see what data and types are available to you. 
 
@@ -200,7 +200,11 @@ I've additionally provided an entity relationship (ER) diagram of the schema in 
 ```
 </details>
 
+### Protype your Custom Reporting!
 
+Finally, once you have done a thorough evaluation, start scripting your custom reporting solution. Make sure you have a good understanding of the data schema and temporal nature of the data to be able to pull the actionable insights you need!
+
+Keep on hacking!
 
 
 
