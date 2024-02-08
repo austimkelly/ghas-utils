@@ -24,6 +24,20 @@ This document assumes you familiar with these concepts. If you are not, you may 
 
 # Strategic Understanding
 
+## Pre-requisites 
+
+ 
+Adding any alerting tool to your development lifecycle won’t fix anything if you don’t have the right structures in place. This is especially for tooling that produces alerts that may interrupt the software developer workflow where the developer has not had the right training and expectations set. Consider these pre-requisites and how they affect the integration and eventual uptake of your tool: 
+
+* Do you have an information security policy with clear SLAs for remediating code level vulnerabilities? 
+* Do you have a vulnerability and patch management standard with clearly documented SLAs? 
+* Do you have a process for which you can evaluate the severity of a security defect/vulnerability? 
+* Have you set up clear ownership to find the owners of any vulnerability or code defect? 
+* Do you have a way to escalate and review vulnerabilities? 
+* Are there requirements to track alerts in bug tracking systems? 
+
+Having clear answers to these questions at any level in your software development program will go a long way in ensuring the success of your Github Advanced Security roll out. 
+
 ## What questions are you trying to answer?
 
 The first step in building a reporting strategy is to formulate the questions you want to answer. For example, you may be interested in understanding the net flow of critical code scanning alerts. Or you may want to track the SLA adherence for critical vulnerabilities reported in dependabot to ensure critical dependencies are patched on time. There is no one-size-fits-all answer to this question, rather it depends on the goals of the organization and what you are trying to control. Do you want to ensure all your repositories are compliant? Do you want to send alerts to teams that are not meeting SLAs? Again, this will be entirely dependent on what is important to your own organization.
@@ -81,6 +95,7 @@ An entity relationship (ER) diagram of the schemas is available below:
 > **Note:** In the following ER diagram, names with `-(FK)` suffix denote items that can be used as a foreign key.
 
 > **Note:** The fields `dismissed_by`, `dismissed_comment`, `fixed_at`, and `dismissed_reason`, can be normalized for Code Scanning Alerts and Dependabot Alerts, but not Secret scanning alerts. For normalizing joins with Secret Alerts with Code/Dependabot alerts, you can use secret alert fields `resolved_by`, `resolution_comment`, and `resolved_at` respectively.
+
 ```mermaid
     erDiagram
     CODE-SCANNING-ALERTS {
@@ -200,7 +215,7 @@ An entity relationship (ER) diagram of the schemas is available below:
 
 Finally, once you have done a thorough evaluation, start scripting your custom reporting solution. Make sure you understand the data schema and temporal nature of the data to pull the actionable insights you need!
 
-Keep on hacking!
+Keep on hacking and happy reporting!
 
 
 
