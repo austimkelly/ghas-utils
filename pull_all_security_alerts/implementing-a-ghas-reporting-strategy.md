@@ -6,8 +6,9 @@
 
 The GitHub Advanced Security (GHAS) suite of tools provides valuable analysis and reporting into the security posture of your codebase. Multiple tools form the GHAS suite including Code Scanning, Dependabot (Vulnerably Analysis), Secret Scanning, and Security Advisories. Each of these tools provides a unique set of security alerts and reporting that can be used to find and remediate security vulnerabilities in your code. As with any security tool, monitoring and measuring the performance of security alerts is key to its success. 
 
-This article will provide an overview of steps you can take to build your own security reporting strategy using the GHAS Security Overview and Alert reporting as well as considerations for building your own custom reporting. We'll start our GHAS reporting strategy with four primary questions to answer before you formalize a strategy and begin to build, report, and act on your security alerts.
+This article will provide an overview of steps you can take to build your own security reporting strategy using the GHAS Security Overview and Alert reporting as well as considerations for building your own custom reporting. We'll start our GHAS reporting strategy with five (5) primary questions to answer before you formalize a strategy and begin to build, report, and act on your security alerts.
 
+* [Pre-requisites: Understand the security culture](#pre-requisites)
 * [What questions are you trying to answer?](#what-questions-are-you-trying-to-answer)
 * [What GHAS reporting exists to answer these questions?](#what-ghas-reporting-exists-to-answer-these-questions)
 * [Who has access to the built-in GHAS reporting?](#who-has-access-to-the-built-in-ghas-reporting)
