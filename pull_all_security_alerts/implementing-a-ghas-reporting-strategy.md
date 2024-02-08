@@ -31,7 +31,6 @@ This document assumes you are familiar with these concepts in the references bel
 
 ## Pre-requisites 
 
- 
 Adding a security alerting tool to your software development lifecycle won’t fix anything if you don’t have the right structures in place. If your software developers don’t have the right training and expectations on how to respond to security alerts, the tool will quickly become a source of noise and likely be ignored. Setting these development practice expectations will help ensure you can measure the efficacy of your security program as well as help you tune and improve the alerting precision. 
 
 Consider these pre-requisites and how they affect the integration and eventual deployment of your tool. You may want to consider how rolling out a GHAS solution across your enterprise works in concert with these concepts: 
