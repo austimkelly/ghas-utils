@@ -2,9 +2,11 @@ import subprocess
 import requests
 import sys
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
+from dateutil.parser import parse
 import os
 import pandas as pd
+
 
 
 def generate_report(org, secrets_file, dependencies_file, code_scanning_file):
@@ -12,25 +14,36 @@ def generate_report(org, secrets_file, dependencies_file, code_scanning_file):
     secrets_df = pd.read_csv(secrets_file, on_bad_lines='skip') if os.path.isfile(secrets_file) else pd.DataFrame()
     dependencies_df = pd.read_csv(dependencies_file, on_bad_lines='skip') if os.path.isfile(dependencies_file) else pd.DataFrame()
     code_scanning_df = pd.read_csv(code_scanning_file, on_bad_lines='skip') if os.path.isfile(code_scanning_file) else pd.DataFrame()
-  
-    # Count the number of active and open secrets
-    active_open_secrets = ((secrets_df['state'] == 'open') & (secrets_df['validity'] == 'active')).sum()
+    
+    # Convert 'created_at' to datetime
+    for df in [secrets_df, dependencies_df, code_scanning_df]:
+        if not df.empty:
+            df['created_at'] = pd.to_datetime(df['created_at'])
 
-    # Count the number of open critical alerts for dependencies and code scanning
-    #print(dependencies_df[(dependencies_df['state'] == 'open') & (dependencies_df['security_advisory_severity'] == 'critical')])
-    #print(code_scanning_df[(code_scanning_df['state'] == 'open') & (code_scanning_df['rule_severity'] == 'critical')])
-    open_critical_dependencies = dependencies_df[(dependencies_df['state'] == 'open') & 
-                                             (dependencies_df['security_advisory_severity'].isin(['critical', 'high']))
-                                             ].shape[0] if not dependencies_df.empty else 0
-    open_critical_code_scanning = code_scanning_df[(code_scanning_df['state'] == 'open') & 
-                                                   ((code_scanning_df['rule_security_severity_level'] == 'critical') |
-                                                    (code_scanning_df['rule_severity'] == 'error'))
-                                                   ].shape[0] if not code_scanning_df.empty else 0
+    # Define SLA in hours
+    sla_days = 7  # 7 days SLA
 
-    # Print the results
-    print(f'Number of active and open secrets for {org}: {active_open_secrets}')
-    print(f'Number of open critical alerts for dependencies for {org}: {open_critical_dependencies}')
-    print(f'Number of open critical alerts for code scanning for {org}: {open_critical_code_scanning}')
+    # Filter open and critical alerts
+    filtered_secrets_df = secrets_df[(secrets_df['state'] == 'open') & (secrets_df['validity'] == 'active')] if not secrets_df.empty else pd.DataFrame()
+    filtered_dependencies_df = dependencies_df[(dependencies_df['state'] == 'open') & (dependencies_df['security_advisory_severity'].isin(['critical', 'high']))] if not dependencies_df.empty else pd.DataFrame()
+    filtered_code_scanning_df = code_scanning_df[(code_scanning_df['state'] == 'open') & ((code_scanning_df['rule_security_severity_level'] == 'critical') | (code_scanning_df['rule_severity'] == 'error'))] if not code_scanning_df.empty else pd.DataFrame()
+
+    # Print the summary results
+    print(f'Number of active and open secrets for {org}: {len(filtered_secrets_df)}')
+    print(f'Number of open critical alerts for dependencies for {org}: {len(filtered_dependencies_df)}')
+    print(f'Number of open critical alerts for code scanning for {org}: {len(filtered_code_scanning_df)}')
+
+    print('--------------------------')
+    print('Open critical alerts with SLA status:')
+    print('--------------------------')
+    for df, alert_type in zip([filtered_secrets_df, filtered_dependencies_df, filtered_code_scanning_df], ['secrets', 'dependencies', 'code_scanning']):
+        if not df.empty:
+            df = df.copy()  # Create a copy of the DataFrame
+            df['sla'] = df['created_at'].apply(lambda x: (datetime.now(timezone.utc) - x).total_seconds() / 86400 - sla_days)
+            df['sla_status'] = df['sla'].apply(lambda x: '+ (breach SLA)' if x > sla_days else '- (no SLA breach)')
+            df['sla'] = df['sla'].apply(lambda x: f'{x} days')  # Add units to the sla column
+            df['alert_type'] = alert_type
+            print(df[['alert_type', 'html_url', 'sla', 'sla_status']])
 
 # This function is used to flatten a nested dictionary. 
 # The arguments are a dictionary to flatten (dd), a separator for the keys (separator), and a prefix for the keys (prefix).
