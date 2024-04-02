@@ -4,7 +4,7 @@ import time
 from ghas_scan_helpers import get_repos, get_repo_details, print_aggregated_metrics_from_csv
 
 # Set the GitHub owner type, owner name, and personal access token
-owner_type = 'user'  # Options are 'org' or 'user'
+owner_type = 'org'  # Options are 'org' or 'user'
 owner_names = ['swell-consulting']
 
 # Get the access token from the environment variable
@@ -14,6 +14,7 @@ if not access_token:
 
 # Include or don't include forked repositories?
 skip_forks = False
+skip_archives = True
 
 # Set up headers with the access token
 headers = {'Authorization': f'token {access_token}'}
@@ -28,7 +29,7 @@ all_repos = []
 for owner_name in owner_names:
     # Get list of repositories for the current owner
     print(f"Getting list of repositories for {owner_name}...")
-    repos = get_repos(owner_name, headers, owner_type)
+    repos = get_repos(owner_name, headers, owner_type, skip_forks, skip_archives)
 
     # Append the repositories to the all_repos list
     all_repos.extend(repos)
@@ -92,10 +93,11 @@ with open(csv_filename, 'w', newline='') as csvfile:
         if len(lines) <= 1:
             print(f"ERROR: File {csv_filename} is empty or only contains headers")
         else:
-            print_aggregated_metrics_from_csv(csvfile)
+            try:
+                print_aggregated_metrics_from_csv(csv_filename)
+            except Exception as e:
+                print(f"ERROR: An error occurred when trying to parse the file {csv_filename}: {str(e)}")
         
-        csvfile.close()
-
 # Get the end time
 end_time = time.time()
 

@@ -7,8 +7,6 @@ from dateutil.parser import parse
 import os
 import pandas as pd
 
-
-
 def generate_report(org, secrets_file, dependencies_file, code_scanning_file):
    
     secrets_df = pd.read_csv(secrets_file, on_bad_lines='skip') if os.path.isfile(secrets_file) else pd.DataFrame()

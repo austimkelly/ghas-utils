@@ -2,8 +2,19 @@ import requests
 import base64
 import pandas as pd
 
-def print_aggregated_metrics_from_csv(csv_file):
-    df = pd.read_csv(csv_file)
+def print_aggregated_metrics_from_csv(csv_file_name):
+
+    df = None
+    try:
+        print(f"Attempting to read file: {csv_file_name}")
+        df = pd.read_csv(csv_file_name)
+        print(f"File {csv_file_name} read successfully.")
+    except Exception as e:
+        print(f"ERROR: An error occurred when trying to parse the file {csv_file_name}: {str(e)}")
+
+    if df is None:
+        print(f"ERROR: DataFrame could not be created from file {csv_file_name}")
+        return
 
     total_repos = len(df)
     public_repos = len(df[df['is_private'] == False])
@@ -16,10 +27,10 @@ def print_aggregated_metrics_from_csv(csv_file):
 
     print(f"Total repositories: {total_repos}")
     print(f"Total public repositories: {public_repos}")
-    print(f"Percent of repositories that are forked: {forked_repos / total_repos * 100}%")
-    print(f"Percent of repositories with Codeowners: {repos_with_codeowners / total_repos * 100}%")
-    print(f"Percent of repositories with Secrets Scanning Enabled: {repos_with_secrets_scanning / total_repos * 100}%")
-    print(f"Percent of repositories with Secrets Push Protection Enabled: {repos_with_secrets_push_protection / total_repos * 100}%")
+    print(f"Percent of repositories that are forked: {forked_repos / total_repos * 100:.1f}%")
+    print(f"Percent of repositories with Codeowners: {repos_with_codeowners / total_repos * 100:.1f}%")
+    print(f"Percent of repositories with Secrets Scanning Enabled: {repos_with_secrets_scanning / total_repos * 100:.1f}%")
+    print(f"Percent of repositories with Secrets Push Protection Enabled: {repos_with_secrets_push_protection / total_repos * 100:.1f}%")
     print(f"Total number of open critical and high code scanning alerts: {open_critical_high_alerts}")
     print(f"Total number of open critical dependabot alerts: {open_critical_dependabot_alerts}")
 
@@ -281,7 +292,7 @@ def get_repo_details(owner, repo_name, headers):
     }
    
 
-def get_repos(owner, headers, owner_type, skip_forks=False):
+def get_repos(owner, headers, owner_type, skip_forks=False, skip_archived=True):
     if owner_type == 'user':
         repos_url = f'https://api.github.com/users/{owner}/repos'
     elif owner_type == 'org':
@@ -289,19 +300,36 @@ def get_repos(owner, headers, owner_type, skip_forks=False):
     else:
         raise ValueError("Invalid owner type. Use 'user' or 'org'.")
 
-    response = requests.get(repos_url, headers=headers)
+    page = 1
+    repos_per_page = 50
+    repos = []
 
-    if response.status_code == 200:
-        repos = response.json()
+    while True:
+        print(f"Fetching page {page}...")
+        response = requests.get(f"{repos_url}?page={page}&per_page={repos_per_page}", headers=headers)
 
-        # print the number of repos found in the response array
-        print(f"Number of repos found for {owner}: {len(repos)}")
+        if response.status_code == 200:
+            page_repos = response.json()
+            if len(page_repos) < repos_per_page:
+                repos.extend(page_repos)
+                break
 
-        # Filter out forked repositories
-        if skip_forks:
-            non_forked_repos = [repo for repo in repos if not repo['fork']]
-            return non_forked_repos
+            repos.extend(page_repos)
+            page += 1
         else:
-            return repos
+            raise Exception(f"Failed to fetch repositories. Status code: {response.status_code}, Response: {response.text}")
+
+    print(f"Number of repos found for {owner}: {len(repos)}")
+
+    skipped_repos = []
+    if skip_forks or skip_archived:
+        filtered_repos = []
+        for repo in repos:
+            if (skip_forks and repo['fork']) or (skip_archived and repo['archived']):
+                skipped_repos.append(repo['name'])
+            else:
+                filtered_repos.append(repo)
+        print(f"Skipped repos: {', '.join(skipped_repos)}")
+        return filtered_repos
     else:
-        raise Exception(f"Failed to fetch repositories. Status code: {response.status_code}, Response: {response.text}")
+        return repos
