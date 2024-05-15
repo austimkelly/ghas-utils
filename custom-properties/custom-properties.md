@@ -1,0 +1,7 @@
+GitHub's Custom Properties allow you to add metadata to repositories in your organization. You can use those properties to target repositories with rulesets. Custom properties can be either single select (combo box) or free text. You can make custom properties required or optional for all repositories in your organization.
+
+* [Managing custom properties for repositories in your organization](https://docs.github.com/en/organizations/managing-organization-settings/managing-custom-properties-for-repositories-in-your-organization#searching-and-filtering-repositories-by-custom-properties-values) - How you can set a custom property for your organization.
+*  [REST API Endpoints for custom properties](https://docs.github.com/en/rest/repos/custom-properties?apiVersion=2022-11-28)  - You can use the REST API to view the custom properties that were assigned to a repository by the organization that owns the repository.
+* [Repository Custom Properties GA and Ruleset Improvements](https://github.blog/changelog/2024-02-14-repository-custom-properties-ga-and-ruleset-improvements/) - There's a [good video here](https://www.youtube.com/watch?v=z0CYdcqZxyQ) that explains how to use custom properties and rulesets to manage your repositories.
+
+# TODO: Sample script to pull custom properties for a repository

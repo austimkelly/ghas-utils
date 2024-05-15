@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import os
 import pandas as pd
 import json
+import collections
 
 def generate_report(org, secrets_file, dependencies_file, code_scanning_file):
     # Define a helper function to load data
@@ -73,20 +74,15 @@ def generate_report(org, secrets_file, dependencies_file, code_scanning_file):
 
 # This function is used to flatten a nested dictionary. 
 # The arguments are a dictionary to flatten (dd), a separator for the keys (separator), and a prefix for the keys (prefix).
-def flatten_dict(dd, separator='_', prefix=''):
-    # The function returns a dictionary comprehension.
-    # If dd is a dictionary, it will iterate over its items.
-    return { 
-        # For each item, it checks if a prefix exists. If it does, it concatenates the prefix, separator, and key.
-        # If no prefix exists, it simply uses the key.
-        f"{prefix}{separator}{k}" if prefix else k : v
-        # This is the start of the dictionary comprehension. It iterates over the items in dd.
-        for kk, vv in dd.items()
-        # For each item, it calls flatten_dict recursively on the value and iterates over the items in the resulting dictionary.
-        # It uses the key from dd as the prefix for this recursive call.
-        for k, v in flatten_dict(vv, separator, kk).items()
-    # If dd is not a dictionary, it simply returns a dictionary with a single item. The key is the prefix and the value is dd.
-    } if isinstance(dd, dict) else { prefix : dd }
+def flatten_dict(d, parent_key='', sep='_'):
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 def write_to_csv(alerts, alert_type, org, filename):
 
@@ -173,7 +169,13 @@ def get_code_scanning_alerts(org, token, filename):
     alerts = fetch_alerts_generic(url, headers, params)
 
     # Debug: Print the JSON object for alerts
-    print(json.dumps(alerts, indent=4))
+    #print(json.dumps(alerts, indent=4))
+
+    # Ensure "security_severity_level" is in the "rule" dictionary for all alerts
+    # This is a hack where some tools (e.g. tfsec) didn't put in the "security_severity_level" in the "rule" dictionary
+    for alert in alerts:
+        if 'rule' in alert and 'security_severity_level' not in alert['rule']:
+            alert['rule']['security_severity_level'] = 'N/A'  # or 'unknown'
 
     flattened_alerts = [flatten_dict(alert) for alert in alerts]
 
