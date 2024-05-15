@@ -1,5 +1,5 @@
 
-The sample script `ghas-settings.py` demonstrates how to use the GitHub REST API to retrieve and update the security settings for an organization. NOTE: This does not attempt to determine which custom configurations (e.g. dependabot.yml) or code scanning workflows are enabled in the repository. 
+The sample script `ghas-settings.py` demonstrates how to use the GitHub REST API to retrieve and update the security settings for an organization. NOTE: This does not attempt to determine which custom configurations (e.g. `dependabot.yml`) or code scanning workflows are enabled in the repository. 
 
 ## Installing
 
@@ -34,6 +34,6 @@ The relevant security settings returned in the JSON response are:
   "secret_scanning_push_protection_custom_link_enabled": false 
 ```
 
-* [Enable or Disable a Security Feature for an Organiztion](https://docs.github.com/en/rest/orgs/orgs?apiVersion=2022-11-28#enable-or-disable-a-security-feature-for-an-organization)
+* [Enable or Disable a Security Feature for an Organization](https://docs.github.com/en/rest/orgs/orgs?apiVersion=2022-11-28#enable-or-disable-a-security-feature-for-an-organization)
 
 

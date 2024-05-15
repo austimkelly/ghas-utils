@@ -4,8 +4,8 @@ import time
 from ghas_scan_helpers import get_repos, get_repo_details, print_aggregated_metrics_from_csv
 
 # Set the GitHub owner type, owner name, and personal access token
-owner_type = 'org'  # Options are 'org' or 'user'
-owner_names = ['swell-consulting']
+owner_type = 'user'  # Options are 'org' or 'user'
+owner_names = ['austimkelly']
 
 # Get the access token from the environment variable
 access_token = os.environ.get('GITHUB_ACCESS_TOKEN')
