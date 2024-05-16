@@ -48,4 +48,3 @@ The ruleset setting for the custom property selection and rule selection look li
 
 ![./img/status_checks.png](./img/status_checks.png)
 
-

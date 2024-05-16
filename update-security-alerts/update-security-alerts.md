@@ -13,3 +13,4 @@ You can update security alerts for a particular alert number in a specific repos
 ``` bash
 python3 update-security-alerts.py --repo "OWNER/REPO" --gh_token "YOUR-TOKEN" --alert_type "dependabot" --state "dismissed" --dismissed_reason "tolerable_risk" --dismissed_comment "This alert is accurate but we use a sanitizer." --alert_number "ALERT_NUMBER"
 ```
+
