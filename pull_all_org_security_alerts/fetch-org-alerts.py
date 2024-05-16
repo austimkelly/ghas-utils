@@ -5,7 +5,6 @@ import csv
 from datetime import datetime, timezone
 import os
 import pandas as pd
-import json
 import collections
 
 def generate_report(org, secrets_file, dependencies_file, code_scanning_file):
