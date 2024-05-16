@@ -13,6 +13,8 @@ See [required-ghas-settings.json](./required-ghas-settings.json) for a file that
 
 Here's a full run to read and write out the desired security settings for an organization:
 
+> NOTE: The application will prompt you if you want to write the new settings. You should only test this on a low-stakes organization or a test organization.
+
 ```bash
 % python3 ghas-settings.py {ORG}  github_pat_YOURTOKEN --verbose --org-security-settings ./required-ghas-settings.json
 ```

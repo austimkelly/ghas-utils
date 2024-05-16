@@ -1,6 +1,5 @@
 import requests
 import argparse
-import json
 
 def fetch_custom_properties(repo, gh_pat):
     headers = {

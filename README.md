@@ -1,77 +1,23 @@
-# GHAS Scan
+# GHAS Utils
 
-This is a Python script that interacts with the GitHub API to fetch repository details and code scanning analysis information.
-Make sure the repository exists and your GitHub token has the necessary permissions to access it.
+# Utils
 
-## Prerequisites
+Here's a table with all the demo/utilities and what they do:
 
-- Python 3.6 or higher
-- `requests` library
+> NOTE: There are not meant to be production grade scripts. They are meant to be education and to help you understand some areas where you would want to use the GitHub API. 
 
-## Installation
+| Demo name | Demo description |
+|-----------|-----------------|
+|  [ghas-org-scan](./ghas-org-scan/)         |   This is a sort of compliance report that builds a table of settings and security alert volumes for all repositories in an organization. This is a great way to quickly spot out-of-compliance repositories where GitHub reporting may fall short.             |
+|  [ghas-settings](./ghas-settings/)         |      This is a simple demo to show you want GHAS settings you can read and write for an organization. GitHub does support https://docs.github.com/en/code-security/getting-started/adding-a-security-policy-to-your-repository now, but this is good if you want to keep things programatically synchronized or have tons or orgs.           |
+|  [pull_all_org_security_alerts](./pull_all_org_security_alerts/)         |     This pulls all the dependabot, secret, and code scanning alerts into 3 CSV files for an organization.            |
+|  [pull_all_repo_security_alerts](./pull_all_repo_security_alerts/)         |     This just pulls security alerts and advisories for a repo. There's some extra documentation in there about the alert schemas and how to think about your security alert observability program.            |
+|  [sbom-visualizer](./sbom-visualizer/)         |      This is just a quick hack to see how to parse the SBOM export from GitHub. It's nothing special here.           |
+|  [secret-alert-pull](./secret-alert-pull/)         |      Pulls all secrets for an org.           |
+|  [update-security-alerts](./update-security-alerts/)         |    This demo show how to update security alerts. This can be useful when needing to bulk modify hundreds or thousands of security alerts.             |
 
-1. Clone this repository:
-    ```bash
-    git clone git@github.com:austimkelly/ghas-utils.git
-    ```
-2. Navigate to the cloned repository:
-    ```bash
-    cd ghas-utils
-    ```
-3. Install the required Python libraries:
-    ```bash
-    pip3 install requests
-    ```
-    or
 
-     ```bash
-    pip3 install -r requests.txt
-    ```   
+# GitHub Personal Access Token
 
-## Usage
+All these example require the use of a personal access token. See [Setting a Personal Access Token for your Organization](https://docs.github.com/en/organizations/managing-programmatic-access-to-your-organization/setting-a-personal-access-token-policy-for-your-organization).
 
-1. Create a [Github Personal Access Token](https://docs.github.com/en/enterprise-server@3.6/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) and set the value in a `GITHUB_ACCESS_TOKEN` environment variable. Your personal access token will start with `github_pat_`
-    * This script is tested with these permissions:
-
-    ![Permissions](./doc/gh_pat_permissions.png)
-
-NOTE: For organizations which you are not an owner, please see [Setting a Personal Access Token for your Organization](https://docs.github.com/en/organizations/managing-programmatic-access-to-your-organization/setting-a-personal-access-token-policy-for-your-organization). If you leverage a personal access token to read organization repositories, you will need to enable this policy, otherwise only public repositories will be readable. You will need one personal access token per organization.
-
-2. Open `ghas-scan.py` in your favorite text editor.
-3. Replace `owner_type` variabe value with `user` or `org`. 
-4. Replace `owner_name` variable value with the corresponding user or org name.
-5. Set `skip_forks` to `True` if you want to omit forked repos from the results.
-6. Run the script:
-    ```bash
-    python3 ghas-scan.py
-    ```
-
-### Output and Example
-
-Output is written to `github_data.csv` at the repository root.  It looks something like this:
-
-```
-Getting list of repositories...
-Fetching repo security configs...
-CSV file 'github_data.csv' written successfully.
-Total repositories: 16
-Total public repositories: 16
-Percent of repositories that are forked: 0.0%
-Percent of repositories with Codeowners: 6.25%
-Percent of repositories with Secrets Scanning Enabled: 12.5%
-Percent of repositories with Secrets Push Protection Enabled: 12.5%
-Total number of open critical and high code scanning alerts: 0
-Total number of open critical dependabot alerts: 0
-Done.
-```
-
-You can see an example in [./example/example_output.csv](./example/example_output.csv). This is just a basic example to give you an idea of the scehma.
-
-# References
-
-* [Github REST API Documentation](https://docs.github.com/en/rest)
-* [Secret Scanning API](https://docs.github.com/en/rest/secret-scanning/secret-scanning)
-* [Code Scanning API](https://docs.github.com/en/rest/code-scanning/code-scanning)
-* [Dependabot Alerts API](https://docs.github.com/en/rest/dependabot/alerts)
-* [Setting a Personal Access Token for your Organization](https://docs.github.com/en/organizations/managing-programmatic-access-to-your-organization/setting-a-personal-access-token-policy-for-your-organization)
-* [Managing Security Managers in your Organization](https://docs.github.com/en/organizations/managing-peoples-access-to-your-organization-with-roles/managing-security-managers-in-your-organization)
