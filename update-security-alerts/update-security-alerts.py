@@ -5,11 +5,28 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--repo", required=True, help="GitHub repository")
 parser.add_argument("--gh_token", required=True, help="GitHub token")
-parser.add_argument("--alert_type", required=True, choices=["dependabot", "code", "secret"], help="Alert type")
+parser.add_argument("--alert_type", required=True, choices=["dependabot", "code-scanning", "secret"], help="Alert type")
 parser.add_argument("--state", required=True, choices=["dismissed", "open"], help="State")
-parser.add_argument("--dismissed_reason", choices=["fix_started", "inaccurate", "no_bandwidth", "not_used", "tolerable_risk"], help="Dismissed reason")
+parser.add_argument("--dismissed_reason", help="Dismissed reason")
 parser.add_argument("--dismissed_comment", help="Dismissed comment")
 parser.add_argument("--alert_number", required=True, help="Alert number")
+args = parser.parse_args()
+
+dependabot_reasons = ["fix_started", "inaccurate", "no_bandwidth", "not_used", "tolerable_risk"]
+code_reasons = ["null", "false positive", "won't fix", "used in tests"]
+
+if args.state == "dismissed":
+    if args.dismissed_reason is None:
+        parser.error("--dismissed_reason is required when --state is 'dismissed'")
+    elif args.alert_type == "dependabot" and args.dismissed_reason not in dependabot_reasons:
+        parser.error("Invalid --dismissed_reason for dependabot. Choices are: " + ", ".join(dependabot_reasons))
+    elif args.alert_type == "code-scanning" and args.dismissed_reason not in code_reasons:
+        parser.error("Invalid --dismissed_reason for code. Choices are: " + ", ".join(code_reasons))
+
+    if args.dismissed_comment is None:
+        # This is not required in the API but would be a smart practice to always have a message
+        parser.error("--dismissed_comment is required when --state is 'dismissed'")
+
 args = parser.parse_args()
 
 if args.state == "dismissed" and args.dismissed_reason is None:
@@ -18,7 +35,10 @@ if args.state == "dismissed" and args.dismissed_reason is None:
 if args.state == "dismissed" and args.dismissed_comment is None:
     parser.error("--dismissed_comment is required when --state is 'dismissed'")
 
+# Update a dependabot alert
 # API Endpoint: https://docs.github.com/en/rest/dependabot/alerts?apiVersion=2022-11-28#update-a-dependabot-alert
+# Update a code scanning alert
+# API Endpoint: https://docs.github.com/en/rest/code-scanning/code-scanning?apiVersion=2022-11-28#update-a-code-scanning-alert
 url = f"https://api.github.com/repos/{args.repo}/{args.alert_type}/alerts/{args.alert_number}"
 
 # Define the headers
