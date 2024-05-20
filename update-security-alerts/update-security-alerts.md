@@ -10,7 +10,19 @@ You can update security alerts for a particular alert number in a specific repos
 
 # Running the sample script
 
+## Dependabot
+
+### Dismissing a Dependabot alert:
+
 ``` bash
-python3 update-security-alerts.py --repo "OWNER/REPO" --gh_token "YOUR-TOKEN" --alert_type "dependabot" --state "dismissed" --dismissed_reason "tolerable_risk" --dismissed_comment "This alert is accurate but we use a sanitizer." --alert_number "ALERT_NUMBER"
+python3 update-security-alerts.py --repo "swell-consulting/swiss-cheese" --gh_token "YOUR-TOKEN" --alert_type dependabot --state dismissed --dismissed_reason tolerable_risk --dismissed_comment "This alert is accurate but we use a sanitizer." --alert_number 1
 ```
+
+### Reopening a Dependabot alert:
+
+``` bash
+python3 update-security-alerts.py --repo "swell-consulting/swiss-cheese" --gh_token "YOUR_TOKEN" --alert_type dependabot --state open  --alert_number 1
+```
+
+
 
