@@ -4,6 +4,7 @@ GitHub's Custom Properties allow you to add metadata to repositories in your org
 *  [REST API Endpoints for custom properties](https://docs.github.com/en/rest/repos/custom-properties?apiVersion=2022-11-28)  - You can use the REST API to view the custom properties that were assigned to a repository by the organization that owns the repository.
 * [Repository Custom Properties GA and Ruleset Improvements](https://github.blog/changelog/2024-02-14-repository-custom-properties-ga-and-ruleset-improvements/) - There's a [good video here](https://www.youtube.com/watch?v=z0CYdcqZxyQ) that explains how to use custom properties and rulesets to manage your repositories.
 * [Creating rulesets for repositories in your organization](https://docs.github.com/en/enterprise-cloud@latest/organizations/managing-organization-settings/creating-rulesets-for-repositories-in-your-organization) - By [combining rulesets with custom properties](https://docs.github.com/en/enterprise-cloud@latest/organizations/managing-organization-settings/creating-rulesets-for-repositories-in-your-organization#choosing-which-repositories-to-target-in-your-organization), you can define which policies apply to which repositories in your organization. Be sure to check out some of the [ruleset-recipes](https://github.com/github/ruleset-recipes) on GitHub you can import too!
+* [Custom Properties roadmap issue](https://github.com/github/roadmap/issues/799) - This is the original roadmap issue for custom properties. Released in Feb 2024.
 
 # Example Script to pull custom properties from a repository
 

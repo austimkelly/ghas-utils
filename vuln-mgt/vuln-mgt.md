@@ -1,0 +1,3 @@
+This isn't really a GHAS-specific component but rather a generic flow chart for thinking about how to handle vulnerabilities and escalating critical vulnerabilities to a risk program.
+
+The [`.excalidraw`](./escalation-workflow.excalidraw) file in this directory uses [Excalidraw](https://excalidraw.com/) to render the flowchart. There's also a [VS Code extension](https://github.com/excalidraw/excalidraw-vscode) you can use to live edit in your IDE.
